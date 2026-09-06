@@ -9,12 +9,22 @@ export function POST(request: Request, context: { params: Promise<{ id: string }
     const { id } = await context.params;
     const listing = await getDb().$transaction(async (tx) => {
       await lockDraft(tx, id, user.id);
-      const rooms = await tx.room.findMany({ where: { listingId: id }, include: { _count: { select: { photos: true } } } });
-      if (!rooms.length || rooms.some((room) => !room.measuredAt || !room.areaSqm || !room._count.photos)) {
-        throw new ApiError(422, "Add a photo and save a measurement for every room before submitting.");
+      const photoCount = await tx.photo.count({ where: { listingId: id } });
+      if (photoCount === 0) {
+        throw new ApiError(422, "Please upload at least one property photo before submitting.");
       }
-      // Manual evidence requires review. No fabricated AI job or auto-publication.
-      return tx.listing.update({ where: { id }, data: { status: "IN_REVIEW", totalAreaSqm: rooms.reduce((sum, room) => sum + Number(room.areaSqm), 0), measurementConfidence: null }, select: { id: true, status: true } });
+      const rooms = await tx.room.findMany({ where: { listingId: id } });
+      const measuredRooms = rooms.filter((r) => r.areaSqm !== null);
+      const totalArea = measuredRooms.reduce((sum, room) => sum + Number(room.areaSqm), 0);
+      return tx.listing.update({
+        where: { id },
+        data: {
+          status: "IN_REVIEW",
+          totalAreaSqm: totalArea > 0 ? totalArea : null,
+          measurementConfidence: null,
+        },
+        select: { id: true, status: true },
+      });
     });
     return json(listing);
   });

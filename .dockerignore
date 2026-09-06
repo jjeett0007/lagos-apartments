@@ -1,0 +1,46 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Build outputs and caches
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+
+# Environment and secrets (injected at runtime via container orchestrator)
+.env
+.env*.local
+.env.development
+.env.production
+.env.test
+
+# Version control
+.git
+.gitignore
+
+# Testing and test databases
+coverage/
+tests/
+
+# Logs and runtime artifacts
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# System and editor files
+.DS_Store
+*.pem
+.idea
+.vscode
+.agents
+.gemini
+
+# Repository documentation
+README.md
+CLAUDE.md
+AGENTS.md

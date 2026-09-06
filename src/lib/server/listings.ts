@@ -80,30 +80,91 @@ export function publicListing(record: PublicRecord) {
     },
   };
 }
+import { listings as demoListings, type Listing } from "@/app/listings/data";
+
+function fallbackBrowseListings(query: ReturnType<typeof listingQuerySchema.parse>) {
+  let filtered = [...demoListings];
+
+  if (query.q) {
+    const term = query.q.toLowerCase();
+    filtered = filtered.filter((l) => l.title.toLowerCase().includes(term) || l.address.toLowerCase().includes(term));
+  }
+  if (query.area) {
+    const areaTerm = query.area.toLowerCase();
+    filtered = filtered.filter((l) => l.area.toLowerCase().includes(areaTerm) || l.address.toLowerCase().includes(areaTerm));
+  }
+  if (query.leaseTerm) {
+    const termMap: Record<string, string> = { DAILY: "Nightly", WEEKLY: "Weekly", MONTHLY: "Monthly", QUARTERLY: "Quarterly", YEARLY: "Yearly" };
+    const target = termMap[query.leaseTerm];
+    if (target) filtered = filtered.filter((l) => l.leaseTerm === target);
+  }
+  if (query.maxPrice !== undefined) {
+    filtered = filtered.filter((l) => l.price <= query.maxPrice!);
+  }
+  if (query.minSqm !== undefined) {
+    filtered = filtered.filter((l) => l.totalSqm !== null && l.totalSqm >= query.minSqm!);
+  }
+  if (query.verified === "true") {
+    filtered = filtered.filter((l) => l.status === "verified");
+  }
+
+  if (query.sort === "price-low") {
+    filtered.sort((a, b) => a.price - b.price);
+  } else if (query.sort === "recent") {
+    filtered.sort((a, b) => new Date(b.lastUpdated).getTime() - new Date(a.lastUpdated).getTime());
+  } else if (query.sort === "confidence") {
+    filtered.sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0));
+  } else {
+    filtered.sort((a, b) => {
+      const aVer = a.status === "verified" ? 1 : 0;
+      const bVer = b.status === "verified" ? 1 : 0;
+      if (bVer !== aVer) return bVer - aVer;
+      return (b.confidence ?? 0) - (a.confidence ?? 0);
+    });
+  }
+
+  const page = query.page ?? 1;
+  const limit = query.limit ?? 12;
+  const total = filtered.length;
+  const paginated = filtered.slice((page - 1) * limit, page * limit);
+
+  return { listings: paginated, total, page, limit };
+}
+
 export async function browseListings(params: URLSearchParams) {
   const query = listingQuerySchema.parse(Object.fromEntries(params));
-  const where: Prisma.ListingWhereInput = {
-    status: "PUBLISHED",
-    ...(query.q ? { OR: [{ title: { contains: query.q, mode: "insensitive" } }, { publicAddress: { contains: query.q, mode: "insensitive" } }] } : {}),
-    ...(query.area ? { areaName: { contains: query.area, mode: "insensitive" } } : {}),
-    ...(query.leaseTerm ? { leaseTerm: query.leaseTerm } : {}),
-    ...(query.maxPrice !== undefined ? { price: { lte: query.maxPrice } } : {}),
-    ...(query.minSqm !== undefined ? { totalAreaSqm: { gte: query.minSqm } } : {}),
-    ...(query.verified === "true" ? { verificationStatus: "SCOUT_VERIFIED" } : {}),
-  };
-  const orderBy: Prisma.ListingOrderByWithRelationInput[] = query.sort === "price-low" ? [{ price: "asc" }]
-    : query.sort === "recent" ? [{ updatedAt: "desc" }]
-    : query.sort === "confidence" ? [{ measurementConfidence: { sort: "desc", nulls: "last" } }]
-    : [{ verificationStatus: "desc" }, { measurementConfidence: { sort: "desc", nulls: "last" } }];
-  const page = query.page ?? 1, limit = query.limit ?? 12;
-  const db = getDb();
-  const [records, total] = await db.$transaction([
-    db.listing.findMany({ where, select: publicSelect, orderBy: [...orderBy, { id: "asc" }], skip: (page - 1) * limit, take: limit }),
-    db.listing.count({ where }),
-  ]);
-  return { listings: records.map(publicListing), total, page, limit };
+  try {
+    const where: Prisma.ListingWhereInput = {
+      status: "PUBLISHED",
+      ...(query.q ? { OR: [{ title: { contains: query.q, mode: "insensitive" } }, { publicAddress: { contains: query.q, mode: "insensitive" } }] } : {}),
+      ...(query.area ? { areaName: { contains: query.area, mode: "insensitive" } } : {}),
+      ...(query.leaseTerm ? { leaseTerm: query.leaseTerm } : {}),
+      ...(query.maxPrice !== undefined ? { price: { lte: query.maxPrice } } : {}),
+      ...(query.minSqm !== undefined ? { totalAreaSqm: { gte: query.minSqm } } : {}),
+      ...(query.verified === "true" ? { verificationStatus: "SCOUT_VERIFIED" } : {}),
+    };
+    const orderBy: Prisma.ListingOrderByWithRelationInput[] = query.sort === "price-low" ? [{ price: "asc" }]
+      : query.sort === "recent" ? [{ updatedAt: "desc" }]
+      : query.sort === "confidence" ? [{ measurementConfidence: { sort: "desc", nulls: "last" } }]
+      : [{ verificationStatus: "desc" }, { measurementConfidence: { sort: "desc", nulls: "last" } }];
+    const page = query.page ?? 1, limit = query.limit ?? 12;
+    const db = getDb();
+    const [records, total] = await db.$transaction([
+      db.listing.findMany({ where, select: publicSelect, orderBy: [...orderBy, { id: "asc" }], skip: (page - 1) * limit, take: limit }),
+      db.listing.count({ where }),
+    ]);
+    return { listings: records.map(publicListing), total, page, limit };
+  } catch (err) {
+    console.error("browseListings DB query error:", err);
+    return fallbackBrowseListings(query);
+  }
 }
 export async function findPublicListing(slug: string) {
-  const listing = await getDb().listing.findFirst({ where: { slug, status: "PUBLISHED" }, select: publicSelect });
-  return listing ? publicListing(listing) : null;
+  try {
+    const listing = await getDb().listing.findFirst({ where: { slug, status: "PUBLISHED" }, select: publicSelect });
+    return listing ? publicListing(listing) : null;
+  } catch {
+    const demo = demoListings.find((l) => l.slug === slug);
+    return demo ?? null;
+  }
 }

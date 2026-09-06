@@ -138,7 +138,7 @@ function Brand({ mode, title }: { mode?: string; title?: string }) {
   return (
     <div className="flex items-center gap-2.5">
       <Link
-        className="group inline-flex items-center gap-2.5 text-ink-black no-underline transition-transform active:translate-x-0.5 active:translate-y-0.5"
+        className="group inline-flex items-center text-ink-black no-underline transition-transform active:translate-x-0.5 active:translate-y-0.5"
         href="/"
         aria-label="Eko Space home"
       >
@@ -147,14 +147,6 @@ function Brand({ mode, title }: { mode?: string; title?: string }) {
           aria-hidden="true"
         >
           E
-        </span>
-        <span className="grid leading-none max-sm:hidden">
-          <strong className="font-heading text-base font-black tracking-tight uppercase text-ink-black">
-            Eko Space
-          </strong>
-          <small className="mt-0.5 text-[0.62rem] font-black tracking-[0.16em] text-muted-foreground uppercase">
-            Truth in SQM
-          </small>
         </span>
       </Link>
 
@@ -375,7 +367,7 @@ export function ListingWizard({ initialDraft }: { initialDraft?: ListingDraft })
     }
   }
 
-  async function handleFilesUpload(fileList: FileList | null, chosenSection = uploadSection) {
+  async function handleFilesUpload(fileList: FileList | null, chosenSection = uploadSection, customLabel?: string) {
     if (!fileList || fileList.length === 0) return;
     if (!basicsComplete) {
       setShowErrors(true);
@@ -396,6 +388,9 @@ export function ListingWizard({ initialDraft }: { initialDraft?: ListingDraft })
         formData.append("photos", fileList[i]);
       }
       formData.append("section", chosenSection);
+      if (customLabel) {
+        formData.append("label", customLabel);
+      }
 
       const res = await fetch(`/api/listings/${currentId}/photos`, {
         method: "POST",
@@ -1364,8 +1359,9 @@ export function ListingWizard({ initialDraft }: { initialDraft?: ListingDraft })
                           )}
                           <Button
                             type="button"
+                            disabled
                             onClick={() => captureRoom(roomIndex)}
-                            className="min-w-34 border-2 border-ink-black bg-eko-gold font-black uppercase text-xs text-ink-black shadow-[2.5px_2.5px_0px_#0A0A0A] hover:bg-eko-gold-bright active:translate-x-0.5 active:translate-y-0.5 active:shadow-none max-sm:w-full"
+                            className="min-w-34 border-2 border-ink-black bg-eko-gold font-black uppercase text-xs text-ink-black shadow-[2.5px_2.5px_0px_#0A0A0A] hover:bg-eko-gold-bright active:translate-x-0.5 active:translate-y-0.5 active:shadow-none disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none max-sm:w-full"
                           >
                             <Ruler className="stroke-[2.5]" aria-hidden="true" />{" "}
                             {room.status === "measured" ? "Review studio" : "Measure room"}
