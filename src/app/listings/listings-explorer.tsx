@@ -231,7 +231,7 @@ export function ListingsExplorer() {
   const hasFilters = query || area !== "All Lagos" || minimumPrice || maximumPrice || minimumSqm || maximumSqm || leaseTerm !== "Any term" || verifiedOnly;
 
   return (
-    <main className="min-h-screen bg-warm-cream text-ink-black overflow-x-hidden selection:bg-eko-gold selection:text-ink-black">
+    <main className="min-h-screen bg-warm-cream text-ink-black selection:bg-eko-gold selection:text-ink-black">
       <ListingsHeader />
 
       {/* Marquee Ticker Banner */}
@@ -383,7 +383,7 @@ export function ListingsExplorer() {
         {/* Brutalist Sidebar */}
         <aside
           id="listing-filters"
-          className={`sticky top-24 rounded-lg border-[2.5px] border-ink-black bg-card p-5 shadow-[5px_5px_0px_#0a0a0a] max-md:static max-md:mb-6 ${
+          className={`sticky top-28 z-20 self-start max-h-[calc(100vh-8rem)] overflow-y-auto rounded-lg border-[2.5px] border-ink-black bg-card p-5 shadow-[5px_5px_0px_#0a0a0a] max-md:static max-md:max-h-none max-md:overflow-visible max-md:mb-6 ${
             filtersOpen ? "max-md:block" : "max-md:hidden"
           }`}
           aria-label="Listing filters"

@@ -33,6 +33,7 @@ export type Listing = {
   lister: {
     name: string;
     kind: string;
+    phone?: string | null;
     trustScore: number | null;
     responseTime: string;
     memberSince: string;

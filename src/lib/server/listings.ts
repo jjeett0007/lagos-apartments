@@ -50,7 +50,7 @@ const publicSelect = {
   verificationStatus: true, measurementConfidence: true, verifiedAt: true, updatedAt: true, amenities: true,
   photos: { select: { id: true, url: true, altText: true, section: true, label: true }, orderBy: { sortOrder: "asc" as const } },
   rooms: { select: { id: true, name: true, widthMeters: true, lengthMeters: true, areaSqm: true, confidence: true, verificationStatus: true, captureMethod: true }, orderBy: { sortOrder: "asc" as const } },
-  lister: { select: { name: true, companyName: true, listerKind: true, createdAt: true, trustScore: { select: { score: true, accuracyScore: true } }, _count: { select: { listings: { where: { status: "PUBLISHED" as const, verificationStatus: "SCOUT_VERIFIED" as const } } } } } },
+  lister: { select: { name: true, companyName: true, listerKind: true, phone: true, createdAt: true, trustScore: { select: { score: true, accuracyScore: true } }, _count: { select: { listings: { where: { status: "PUBLISHED" as const, verificationStatus: "SCOUT_VERIFIED" as const } } } } } },
 } satisfies Prisma.ListingSelect;
 
 type PublicRecord = Prisma.ListingGetPayload<{ select: typeof publicSelect }>;
@@ -73,6 +73,7 @@ export function publicListing(record: PublicRecord) {
     })),
     lister: {
       name: record.lister.companyName || record.lister.name, kind: record.lister.listerKind?.replaceAll("_", " ").toLowerCase() ?? "Lister",
+      phone: record.lister.phone,
       trustScore: record.lister.trustScore?.score ? Number(record.lister.trustScore.score) : null,
       accuracyRate: record.lister.trustScore?.accuracyScore ? Number(record.lister.trustScore.accuracyScore) : null,
       verifiedListings: record.lister._count.listings, responseTime: "Response history not available yet",

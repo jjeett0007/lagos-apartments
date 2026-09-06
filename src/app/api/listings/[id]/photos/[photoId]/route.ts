@@ -4,6 +4,7 @@ import { ownedListing, lockDraft } from "@/lib/server/listings";
 import { getDb } from "@/lib/server/db";
 import { roomSections, type RoomSection } from "@/lib/validation";
 import type { RoomType } from "@/generated/prisma/enums";
+import { deleteFromCloudinary } from "@/lib/server/cloudinary";
 
 export const runtime = "nodejs";
 
@@ -66,12 +67,24 @@ export function DELETE(
       throw new ApiError(409, "This listing is locked or has already been submitted.");
     }
 
+    const photo = await getDb().photo.findUnique({
+      where: { id: photoId, listingId: id },
+      select: { storageKey: true },
+    });
+    if (!photo) {
+      throw new ApiError(404, "Photo not found.");
+    }
+
     await getDb().$transaction(async (tx) => {
       await lockDraft(tx, id, user.id);
       await tx.photo.delete({
         where: { id: photoId, listingId: id },
       });
     });
+
+    if (photo.storageKey && !photo.storageKey.startsWith("local:")) {
+      await deleteFromCloudinary(photo.storageKey);
+    }
 
     return json({ deleted: true });
   });

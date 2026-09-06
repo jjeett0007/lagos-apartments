@@ -7,6 +7,7 @@ import { ownedListing, lockDraft } from "@/lib/server/listings";
 import { getDb } from "@/lib/server/db";
 import { roomSections, type RoomSection } from "@/lib/validation";
 import type { RoomType } from "@/generated/prisma/enums";
+import { uploadToCloudinary, isCloudinaryConfigured } from "@/lib/server/cloudinary";
 
 export const runtime = "nodejs";
 
@@ -88,37 +89,25 @@ export function POST(request: Request, context: { params: Promise<{ id: string }
 
       let photoUrl = "";
       let storageKey = "";
+      let width: number | undefined;
+      let height: number | undefined;
 
-      // Check if Cloudinary is configured
-      if (process.env.CLOUDINARY_URL) {
+      // Upload to Cloudinary if credentials are configured
+      if (isCloudinaryConfigured()) {
         try {
-          const config = new URL(process.env.CLOUDINARY_URL);
-          if (config.protocol === "cloudinary:" && config.username && config.password && config.hostname) {
-            const timestamp = String(Math.floor(Date.now() / 1000));
-            const folder = `eko-space/${user.id}/${id}`;
-            const signature = createHash("sha1")
-              .update(`folder=${folder}&timestamp=${timestamp}${decodeURIComponent(config.password)}`)
-              .digest("hex");
-            const upload = new FormData();
-            upload.set("file", file);
-            upload.set("folder", folder);
-            upload.set("timestamp", timestamp);
-            upload.set("api_key", decodeURIComponent(config.username));
-            upload.set("signature", signature);
-
-            const res = await fetch(
-              `https://api.cloudinary.com/v1_1/${encodeURIComponent(config.hostname)}/image/upload`,
-              { method: "POST", body: upload, signal: AbortSignal.timeout(30000) }
-            );
-
-            if (res.ok) {
-              const data = (await res.json()) as { secure_url: string; public_id: string };
-              photoUrl = data.secure_url;
-              storageKey = data.public_id;
-            }
-          }
-        } catch {
-          // Fall back to local storage if Cloudinary upload fails
+          const result = await uploadToCloudinary({
+            file: buffer,
+            filename: file.name,
+            folder: `eko-space/${user.id}/${id}`,
+            tags: ["listing", id, section.toLowerCase()],
+          });
+          photoUrl = result.secureUrl;
+          storageKey = result.publicId;
+          width = result.width;
+          height = result.height;
+        } catch (err) {
+          console.error("Cloudinary upload failed, falling back to local storage:", err);
+          // Gracefully fall back to local disk storage
         }
       }
 
@@ -145,6 +134,8 @@ export function POST(request: Request, context: { params: Promise<{ id: string }
             storageKey,
             section,
             label,
+            width,
+            height,
             altText: label || `${section.replaceAll("_", " ")} photo`,
             sortOrder: currentCount + i,
           },

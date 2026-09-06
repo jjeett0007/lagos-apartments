@@ -58,6 +58,19 @@ export async function generateMetadata({ params }: ListingDetailPageProps): Prom
   };
 }
 
+function buildWhatsAppUrl(phone: string | null | undefined, title: string, address: string) {
+  const defaultPhone = "2348035550192";
+  const raw = phone?.trim() || defaultPhone;
+  let digits = raw.replace(/\D/g, "");
+  if (digits.startsWith("0")) {
+    digits = `234${digits.slice(1)}`;
+  } else if (!digits.startsWith("234") && digits.length === 10) {
+    digits = `234${digits}`;
+  }
+  const message = `Hello, I'm inquiring about "${title}" (${address}) on Eko Space.`;
+  return `https://wa.me/${digits || defaultPhone}?text=${encodeURIComponent(message)}`;
+}
+
 export default async function ListingDetailPage({ params }: ListingDetailPageProps) {
   const { slug } = await params;
   const listing = (await findPublicListing(slug)) ?? getListingBySlug(slug);
@@ -66,6 +79,7 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
 
   const isVerified = listing.status === "verified";
   const initials = listing.lister.name.split(" ").map((part) => part[0]).slice(0, 2).join("");
+  const whatsappUrl = buildWhatsAppUrl(listing.lister.phone, listing.title, listing.address);
 
   return (
     <main className="min-h-screen bg-warm-cream text-ink-black">
@@ -297,7 +311,11 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
             <Card className="rounded-[var(--radius-panel)] border-2 border-ink-black bg-card py-0 shadow-[4px_4px_0px_#0A0A0A]">
               <CardContent className="grid gap-3 p-4.5">
                 <Button asChild size="lg" className="min-h-12 justify-between border-2 border-ink-black bg-eko-gold px-4 font-bold text-ink-black shadow-[3px_3px_0px_#0A0A0A] hover:bg-eko-gold-bright hover:shadow-[4px_4px_0px_#0A0A0A] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none">
-                  <a href={`mailto:hello@ekospace.ng?subject=${encodeURIComponent(`Inquiry about ${listing.title}`)}`}>
+                  <a
+                    href={whatsappUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     Message lister <MessageCircle className="stroke-[2.5]" aria-hidden="true" />
                   </a>
                 </Button>
