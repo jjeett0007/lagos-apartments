@@ -587,7 +587,7 @@ async function main() {
       const kitchenArea = Number((totalAreaSqm * 0.12).toFixed(1));
       roomsData.push({
         name: "Chef kitchen",
-        roomType: "KITCHEN" as const,
+        roomType: "LIVING_ROOM" as const,
         sortOrder: roomsData.length,
         areaSqm: kitchenArea,
         widthMeters: Number((Math.sqrt(kitchenArea) * 1.2).toFixed(2)),
@@ -600,7 +600,7 @@ async function main() {
       const bathArea = Number((totalAreaSqm * 0.08).toFixed(1));
       roomsData.push({
         name: "Primary ensuite bathroom",
-        roomType: "BATHROOM" as const,
+        roomType: "LIVING_ROOM" as const,
         sortOrder: roomsData.length,
         areaSqm: bathArea,
         widthMeters: 2.4,
