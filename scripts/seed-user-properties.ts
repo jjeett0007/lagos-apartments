@@ -449,9 +449,49 @@ async function main() {
             url: "/images/hero_apartment_lagos.jpg",
             storageKey: "admiralty-shortlet-photo-001",
             section: "LIVING_ROOM" as const,
-            label: "Open concept lounge photo",
-            altText: "Designer shortlet loft in Lekki Phase 1",
+            label: "Open concept lounge & dining",
+            altText: "Designer shortlet loft living room in Lekki Phase 1",
             sortOrder: 0,
+          },
+          {
+            url: "/images/loft_modern_kitchen.jpg",
+            storageKey: "admiralty-shortlet-photo-002",
+            section: "KITCHEN" as const,
+            label: "Chef quartz island kitchen",
+            altText: "Modern open kitchen with quartz countertops and stainless appliances",
+            sortOrder: 1,
+          },
+          {
+            url: "/images/loft_luxury_bathroom.jpg",
+            storageKey: "admiralty-shortlet-photo-003",
+            section: "BATHROOM" as const,
+            label: "Designer ensuite bathroom",
+            altText: "Luxury bathroom with walk-in rainfall shower and vessel vanity",
+            sortOrder: 2,
+          },
+          {
+            url: "/images/room_calibration_demo.jpg",
+            storageKey: "admiralty-shortlet-photo-004",
+            section: "BEDROOM" as const,
+            label: "Mezzanine master bedroom",
+            altText: "Custom mezzanine loft bedroom suite with floor calibration",
+            sortOrder: 3,
+          },
+          {
+            url: "/images/scout_inspection_lagos.jpg",
+            storageKey: "admiralty-shortlet-photo-005",
+            section: "BALCONY" as const,
+            label: "Building frontage & compound",
+            altText: "Admiralty Lofts secure compound, front entrance and parking",
+            sortOrder: 4,
+          },
+          {
+            url: "/images/lagos_yaba_flat.jpg",
+            storageKey: "admiralty-shortlet-photo-006",
+            section: "STUDY" as const,
+            label: "Lounge workspace nook",
+            altText: "Loft workspace corner with high-speed desk setup",
+            sortOrder: 5,
           },
         ],
         rooms: [
@@ -594,6 +634,30 @@ async function main() {
             listerId: user.id,
           },
         });
+        if (photos && photos.length > 0) {
+          for (const p of photos) {
+            await prisma.photo.upsert({
+              where: { storageKey: p.storageKey },
+              create: {
+                listingId: existingListing.id,
+                url: p.url,
+                storageKey: p.storageKey,
+                section: p.section,
+                label: p.label,
+                altText: p.altText,
+                sortOrder: p.sortOrder,
+              },
+              update: {
+                listingId: existingListing.id,
+                url: p.url,
+                section: p.section,
+                label: p.label,
+                altText: p.altText,
+                sortOrder: p.sortOrder,
+              },
+            });
+          }
+        }
         console.log(`Updated listing: ${listingData.title}`);
       } else {
         console.log(`Creating listing ${listingData.slug}...`);
