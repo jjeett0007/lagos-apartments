@@ -41,6 +41,7 @@ import {
   Sparkles,
   Trash2,
   Upload,
+  Cloud,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -1038,9 +1039,15 @@ export function ListingWizard({ initialDraft }: { initialDraft?: ListingDraft })
                         </p>
                       </div>
                     </div>
-                    <Badge className="border-2 border-ink-black bg-[var(--gold-wash)] px-3 py-1 font-black uppercase text-ink-black shadow-[2px_2px_0px_#0A0A0A]">
-                      {photos.length} photos added
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 rounded-sm border-2 border-ink-black bg-warm-cream px-2.5 py-1 text-[0.65rem] font-black uppercase tracking-wider text-ink-black shadow-[1.5px_1.5px_0px_#0A0A0A]">
+                        <Cloud className="size-3.5 stroke-[2.5] text-ink-black" aria-hidden="true" />
+                        Cloudinary Storage
+                      </span>
+                      <Badge className="border-2 border-ink-black bg-[var(--gold-wash)] px-3 py-1 font-black uppercase text-ink-black shadow-[2px_2px_0px_#0A0A0A]">
+                        {photos.length} photos added
+                      </Badge>
+                    </div>
                   </div>
 
                   <div className="mt-6 grid gap-5">
