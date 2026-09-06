@@ -23,8 +23,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { formatNaira, getListingBySlug, verificationLabel } from "../data";
 import { findPublicListing } from "@/lib/server/listings";
-import Image from "next/image";
 import { ListingsHeader } from "../listings-shell";
+import { ListingGallery } from "./listing-gallery";
 
 export const dynamic = "force-dynamic";
 
@@ -121,35 +121,7 @@ export default async function ListingDetailPage({ params }: ListingDetailPagePro
           </div>
         </section>
 
-        <section className="mt-8 grid gap-4 sm:grid-cols-2" aria-label="Listing photo gallery">
-          {listing.photos.length ? (
-            listing.photos.map((photo) => (
-              <div key={photo.url} className="relative aspect-[4/3] w-full overflow-hidden rounded-xl border-2 border-ink-black shadow-[4px_4px_0px_#0A0A0A]">
-                <Image
-                  src={photo.url}
-                  alt={photo.altText ?? listing.title}
-                  fill
-                  unoptimized
-                  className="object-cover transition-transform duration-300 hover:scale-102"
-                />
-                {Boolean((photo as { section?: unknown }).section) && (
-                  <Badge className="absolute top-3 left-3 border-2 border-ink-black bg-eko-gold font-black uppercase text-ink-black text-xs shadow-[2px_2px_0px_#0A0A0A]">
-                    {String((photo as { section?: string }).section).replaceAll("_", " ")}
-                  </Badge>
-                )}
-                {Boolean((photo as { label?: unknown }).label) && (
-                  <span className="absolute bottom-3 left-3 rounded border-2 border-ink-black bg-card/95 px-2.5 py-1 text-xs font-bold text-ink-black shadow-[1px_1px_0px_#0A0A0A]">
-                    {String((photo as { label?: string }).label)}
-                  </span>
-                )}
-              </div>
-            ))
-          ) : (
-            <div className="rounded-xl border-2 border-dashed border-ink-black bg-card p-8 text-center font-bold">
-              No photos available.
-            </div>
-          )}
-        </section>
+        <ListingGallery photos={listing.photos} title={listing.title} />
 
         <div className="mt-8 grid grid-cols-[minmax(0,1fr)_350px] items-start gap-7 max-lg:grid-cols-[minmax(0,1fr)_310px] max-md:grid-cols-1">
           <div className="grid gap-7">
