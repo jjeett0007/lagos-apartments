@@ -42,7 +42,7 @@ export type Listing = {
   };
 };
 
-export const lagosAreas = ["All Lagos", "Lekki", "Yaba", "Ikeja", "Surulere", "Ajah"] as const;
+export const lagosAreas = ["All Lagos", "Lekki", "Ikoyi", "Victoria Island", "Ikeja", "Yaba", "Surulere", "Magodo", "Ajah", "Gbagada"] as const;
 
 export function formatNaira(value: number) {
   return new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(value);
